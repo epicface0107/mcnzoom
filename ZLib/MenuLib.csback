@@ -1,0 +1,119 @@
+using UnityEngine;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+
+public class MenuLib
+{
+	private AutoPilot ap;
+	public Dictionary<string, SubMenu> menu;
+	public List<Dictionary<string, SubMenu>> mainMenu;
+	private string nowMenu;
+	KeybindLib Key;
+
+
+	public MenuLib(AutoPilot _ap)
+	{
+		this.ap = _ap;
+		Key = new KeybindLib();
+		nowMenu = "menu1";
+		this.menu = new Dictionary<string,SubMenu>();
+		// this.mainMenu = new List<Dictionary<string,SubMenu>>();
+
+		this.menu.Add("menu1",new SubMenu(0,"","menu2","radarScale",""));
+		this.menu.Add("menu2",new SubMenu(0,"menu1","menu3"));
+		this.menu.Add("menu3",new SubMenu(0,"menu2",""));
+
+
+		//radar Menu 
+		this.menu.Add("radarScale",new SubMenu(1,0.15f,0.01f,0.5f,"menu1"));
+
+	}
+
+	public void MenuUpdate()
+	{
+		ap.Print(0,"Menu : " + nowMenu);
+		ap.Print(1,"is Pressed :" + menu["radarScale"].valueNow);
+
+		if (menu[nowMenu].menuType == 0)
+		{
+			if (Key.PressedDown("Menu Right"))
+			{
+				if (menu[nowMenu].nextMenu != "")
+				nowMenu = menu[nowMenu].nextMenu;
+			}
+			else if (Key.PressedDown("Menu Left"))
+			{
+				if (menu[nowMenu].prevMenu != "")
+				nowMenu = menu[nowMenu].prevMenu;
+			}
+			if (Key.PressedDown("Menu Up"))
+			{
+				if (menu[nowMenu].tierUpMenu != "")
+				nowMenu = menu[nowMenu].tierUpMenu;
+			}
+			else if (Key.PressedDown("Menu Down"))
+			{
+				if (menu[nowMenu].tierDownMenu != "")
+				nowMenu = menu[nowMenu].tierDownMenu;
+			}
+		}
+
+		if (menu[nowMenu].menuType == 1)
+		{
+			if (Key.PressedRepeat("Menu Right",menu[nowMenu].valueDelay))
+			{
+				menu[nowMenu].valueNow = menu[nowMenu].valueNow + menu[nowMenu].valueChange;
+			}
+			else if (Key.PressedRepeat("Menu Left",menu[nowMenu].valueDelay))
+			{
+				menu[nowMenu].valueNow = menu[nowMenu].valueNow - menu[nowMenu].valueChange;
+			}
+			else if (Key.PressedDown("Menu Down"))
+			{
+				if (menu[nowMenu].tierDownMenu != "")
+				nowMenu = menu[nowMenu].tierDownMenu;
+			}
+		}
+	}
+
+	public class SubMenu
+	{
+		public float menuType;
+		public string prevMenu;
+		public string nextMenu;
+		public string tierUpMenu;
+		public string tierDownMenu;
+		public float valueNow;
+		public float valueChange;
+		public float valueDelay;
+ 		
+ 		public SubMenu(float menuType,string prev,string next)
+		{
+			this.menuType = menuType;
+			this.prevMenu = prev;
+			this.nextMenu = next;
+			this.tierUpMenu = "";
+			this.tierDownMenu = "" ;
+		}
+
+		public SubMenu(float menuType,string prev,string next,string tierUp,string tierDown)
+		{
+			this.menuType = menuType;
+			this.prevMenu = prev;
+			this.nextMenu = next;
+			this.tierUpMenu = tierUp;
+			this.tierDownMenu = tierDown ;
+		}
+		public SubMenu(float menuType,float valueNow,float increment,float valueDelay,string tierdown)
+		{
+			this.menuType = menuType;
+			this.valueNow = valueNow;
+			this.valueChange = increment;
+			this.valueDelay = valueDelay;
+			this.tierDownMenu = tierdown;
+		}
+	}
+
+}
